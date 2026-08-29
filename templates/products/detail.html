@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<section class="product-detail">
+    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+    <h1>{{ product.name }}</h1>
+    <p class="price">{{ product.price }} €</p>
+    <p>{{ product.description }}</p>
+    <a href="{% url 'checkout' %}" class="btn">Commander</a>
+</section>
+{% endblock %}

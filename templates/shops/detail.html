@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ shop.name }}{% endblock %}
+
+{% block content %}
+<section class="shop-detail">
+    <h1>{{ shop.name }}</h1>
+    {% if shop.description %}
+        <p>{{ shop.description }}</p>
+    {% endif %}
+    {% if shop.logo %}
+        <img src="{{ shop.logo.url }}" alt="{{ shop.name }}">
+    {% endif %}
+</section>
+{% endblock %}

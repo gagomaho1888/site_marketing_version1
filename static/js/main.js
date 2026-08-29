@@ -1,0 +1,1 @@
+console.log("Boutique en ligne — script chargé");
