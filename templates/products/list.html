@@ -1,20 +1,265 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
-{% block title %}Produits{% endblock %}
+{% load query_params %}
+{% load static %}
+
+{% block title %}Produits - Boutique en ligne{% endblock %}
 
 {% block content %}
-<section class="product-list">
-    <h1>Nos produits</h1>
-    <div class="products-grid">
+<div class="container py-4">
+    <h1 class="mb-4">Nos produits</h1>
+
+    <div class="filter-bar mb-4">
+        <div class="search-wrap">
+            <form method="get" action="{% url 'product_list' %}" class="search-bar" role="search">
+                <div class="search-input-wrap">
+                    <input type="search" name="q" id="live-search-input" value="{{ search_query }}"
+                           placeholder="Rechercher un produit…" aria-label="Rechercher un produit" autocomplete="off">
+                    <button type="button" id="live-search-clear" class="search-clear" aria-label="Effacer la recherche" tabindex="-1">✕</button>
+                </div>
+                {% if current_category %}
+                    <input type="hidden" name="categorie" value="{{ current_category.slug }}">
+                {% endif %}
+                <button type="submit" class="btn">Rechercher</button>
+            </form>
+            <div id="live-search-results" class="live-results"></div>
+        </div>
+
+        <div class="filter-pills">
+            <a href="?{% url_replace 'categorie' '' %}"
+               class="filter-pill{% if not current_category %} active{% endif %}">Toutes</a>
+            {% for cat in categories %}
+                <a href="?{% url_replace 'categorie' cat.slug %}"
+                   class="filter-pill{% if current_category == cat %} active{% endif %}">{{ cat.name }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if current_category %}
+        <h2 class="h5 text-muted mb-3">Catégorie : {{ current_category.name }}</h2>
+    {% endif %}
+
+    <div class="row">
         {% for product in products %}
-            <article class="product-card">
-                <h2><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></h2>
-                <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                <p class="price">{{ product.price }} €</p>
-            </article>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="object-fit: cover; height: 200px;">
+                    {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-muted">Aucune image</span>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h2 class="h5 card-title">{{ product.name }}</h2>
+                        {% if product.category %}
+                            <p class="card-text">
+                                <span class="badge bg-secondary">{{ product.category.name }}</span>
+                            </p>
+                        {% endif %}
+                        <p class="card-text text-muted">{{ product.description|truncatewords:20 }}</p>
+                        <p class="card-text fw-bold text-primary fs-4 mb-1">{{ product.price }} FCFA</p>
+                        {% if product.size_stocks.all %}
+                            <p class="card-text small mb-1">
+                                Tailles :
+                                {% for size in product.size_stocks.all %}
+                                    {% if size.stock > 0 %}{{ size.size }}{% if not forloop.last %}, {% endif %}{% endif %}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                        <p class="card-text small mb-0">
+                            {% if product.size_stocks.all %}
+                                {% if product.total_available_stock > 0 %}
+                                    <span class="text-success">Disponible</span>
+                                {% else %}
+                                    <span class="text-danger">Rupture de stock</span>
+                                {% endif %}
+                            {% elif product.stock > 0 %}
+                                <span class="text-success">En stock : {{ product.stock }}</span>
+                            {% else %}
+                                <span class="text-danger">Rupture de stock</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        <a href="{% url 'product_detail' product.pk %}" class="btn btn-primary btn-sm">Voir le produit</a>
+                    </div>
+                </div>
+            </div>
         {% empty %}
-            <p>Aucun produit disponible pour le moment.</p>
+            <div class="col">
+                <p>Aucun produit disponible pour le moment.</p>
+            </div>
         {% endfor %}
     </div>
-</section>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="pager-nav" aria-label="Pagination">
+        <p class="pager-info">
+            Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+        </p>
+        <div class="pager">
+            {% if page_obj.has_previous %}
+                <a class="pager-btn" href="?{% url_replace 'page' page_obj.previous_page_number %}" aria-label="Page précédente">← Précédent</a>
+            {% else %}
+                <span class="pager-btn is-disabled" aria-disabled="true">← Précédent</span>
+            {% endif %}
+
+            {% for p in page_range %}
+                {% if p == page_obj.number %}
+                    <span class="pager-btn is-current" aria-current="page">{{ p }}</span>
+                {% elif p == True %}
+                    <span class="pager-ellipsis" aria-hidden="true">…</span>
+                {% else %}
+                    <a class="pager-btn" href="?{% url_replace 'page' p %}" aria-label="Page {{ p }}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a class="pager-btn" href="?{% url_replace 'page' page_obj.next_page_number %}" aria-label="Page suivante">Suivant →</a>
+            {% else %}
+                <span class="pager-btn is-disabled" aria-disabled="true">Suivant →</span>
+            {% endif %}
+        </div>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .search-wrap {
+        position: relative;
+        max-width: 34rem;
+    }
+    .search-input-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+    }
+    .search-input-wrap input[type="search"] {
+        width: 100%;
+    }
+    .search-input-wrap input[type="search"]::-webkit-search-cancel-button,
+    .search-input-wrap input[type="search"]::-webkit-search-decoration {
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .search-input-wrap input[type="search"]::-ms-clear,
+    .search-input-wrap input[type="search"]::-ms-reveal {
+        display: none;
+    }
+    .search-clear {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 24px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent;
+        color: var(--color-text-light);
+        font-size: 0.85rem;
+        line-height: 1;
+        cursor: pointer;
+        border-radius: 50%;
+    }
+    .search-clear:hover {
+        color: var(--color-primary);
+        background: var(--color-bg-soft);
+    }
+    .search-clear.visible {
+        display: flex;
+    }
+    .live-results {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-soft);
+        overflow: hidden;
+        z-index: 1000;
+        display: none;
+    }
+    .live-results.show {
+        display: block;
+    }
+    .ls-item {
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.6rem 0.8rem;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-text);
+        text-decoration: none;
+    }
+    .ls-item:last-child {
+        border-bottom: none;
+    }
+    .ls-item:hover {
+        background: var(--color-bg-soft);
+        color: var(--color-primary);
+    }
+    .ls-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: var(--color-bg-soft);
+    }
+    .ls-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .ls-thumb-empty {
+        background: var(--color-bg-soft);
+    }
+    .ls-body {
+        min-width: 0;
+        flex: 1;
+    }
+    .ls-name {
+        font-weight: 600;
+        line-height: 1.2;
+    }
+    .ls-cat {
+        font-size: 0.78rem;
+        color: var(--color-text-light);
+    }
+    .ls-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+    .ls-price {
+        color: var(--color-primary);
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+    .ls-avail {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .ls-in {
+        color: #27ae60;
+    }
+    .ls-out {
+        color: var(--color-primary);
+    }
+    .ls-empty {
+        padding: 1rem;
+        color: var(--color-text-light);
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'products/js/live_search.js' %}"></script>
 {% endblock %}

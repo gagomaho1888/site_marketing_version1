@@ -1,6 +1,21 @@
 from django.db import models
 from shops.models import Shop
 
+CLOTHING_SIZE_CHOICES = [
+    ("XXS", "XXS"),
+    ("XS", "XS"),
+    ("S", "S"),
+    ("M", "M"),
+    ("L", "L"),
+    ("XL", "XL"),
+    ("XXL", "XXL (2XL)"),
+    ("XXXL", "XXXL (3XL)"),
+    ("4XL", "4XL"),
+    ("5XL", "5XL"),
+]
+
+SHOE_SIZE_CHOICES = [(str(i), str(i)) for i in range(32, 48)]
+
 
 class Category(models.Model):
     name = models.CharField(
@@ -87,4 +102,34 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
-# Create your models here.
+
+    def total_available_stock(self):
+        return sum(s.stock for s in self.size_stocks.all())
+
+
+class ProductSizeStock(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="size_stocks",
+    )
+
+    size = models.CharField(
+        max_length=30,
+    )
+
+    stock = models.PositiveIntegerField(
+        default=0,
+    )
+
+    class Meta:
+        ordering = ["size"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "size"],
+                name="unique_product_size",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.product.name} - {self.size} ({self.stock})"

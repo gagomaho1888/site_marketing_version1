@@ -3,8 +3,89 @@
 {% block title %}Commande{% endblock %}
 
 {% block content %}
-<section class="checkout">
-    <h1>Finaliser la commande</h1>
-    <p>La commande sera confirmée par WhatsApp.</p>
+<section class="checkout container py-4">
+    <h1 class="h3 mb-4">Finaliser la commande</h1>
+
+    {% if items %}
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <h2 class="h5 mb-3">Votre commande</h2>
+                <div class="checkout-items">
+                    {% for item in items %}
+                        <div class="d-flex gap-3 align-items-center mb-3">
+                            {% if item.product.image %}
+                                <img
+                                    src="{{ item.product.image.url }}"
+                                    alt="{{ item.product.name }}"
+                                    class="rounded shadow-sm checkout-item-image"
+                                >
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <p class="fw-semibold mb-0">{{ item.product.name }}</p>
+                                <p class="small text-muted mb-0">
+                                    {% if item.size %}Taille {{ item.size }} — {% endif %}
+                                    {{ item.quantity }} × {{ item.product.price }} FCFA
+                                </p>
+                            </div>
+                            <div class="fw-bold">{{ item.subtotal }} FCFA</div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <p class="text-muted">
+                    Remplissez vos informations. Votre commande sera envoyée au vendeur via WhatsApp.
+                </p>
+
+                <form method="post" class="checkout-form">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Veuillez corriger les erreurs ci-dessous.
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                        {{ form.name }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+                        {{ form.phone }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.zone.id_for_label }}" class="form-label">{{ form.zone.label }}</label>
+                        {{ form.zone }}
+                    </div>
+
+                    <button type="submit" class="btn btn-whatsapp">Envoyer la commande sur WhatsApp</button>
+                    <a href="{% url 'cart' %}" class="btn">Retour au panier</a>
+                </form>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h5">Résumé</h2>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Sous-total</span>
+                            <span>{{ total }} FCFA</span>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold mb-0">
+                            <span>Total</span>
+                            <span>{{ total }} FCFA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted">Votre panier est vide. Ajoutez d'abord des articles.</p>
+            <a href="{% url 'product_list' %}" class="btn btn-primary">Voir les produits</a>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}

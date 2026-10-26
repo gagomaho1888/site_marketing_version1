@@ -1,0 +1,130 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenue - ALICE_SHOP</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .gate-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, var(--color-bg-soft) 0%, var(--color-bg) 100%);
+            padding: 1.5rem;
+        }
+        .gate-card {
+            width: 100%;
+            max-width: 460px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+            padding: 2.2rem;
+        }
+        .gate-brand {
+            text-align: center;
+            color: var(--color-primary);
+            font-family: Georgia, 'Times New Roman', serif;
+            font-weight: bold;
+            font-size: 1.4rem;
+            margin-bottom: 0.35rem;
+        }
+        .gate-title {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--color-accent);
+            margin-bottom: 1.75rem;
+        }
+        .gate-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.6rem 0;
+            color: var(--color-text-light);
+            font-size: 0.9rem;
+        }
+        .gate-divider::before,
+        .gate-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+        .gate-form label {
+            font-weight: 600;
+        }
+        .gate-form input {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            margin: 0.35rem 0 1rem;
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            color: var(--color-text);
+            outline: none;
+        }
+        .gate-form input:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.12);
+        }
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        .btn-outline {
+            background: var(--color-bg);
+            color: var(--color-accent);
+            border: 1px solid var(--color-border);
+        }
+        .btn-outline:hover {
+            background: var(--color-bg-soft);
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+        .gate-alert {
+            padding: 0.7rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.2rem;
+            font-size: 0.92rem;
+        }
+        .gate-alert.danger { background: #fdecea; color: #b71c1c; border: 1px solid #f5c6cb; }
+        .gate-alert.success { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; }
+    </style>
+</head>
+<body>
+    <div class="gate-wrap">
+        <div class="gate-card">
+            <p class="gate-brand">ALICE_SHOP</p>
+            <h1 class="gate-title">Êtes-vous l'admin ?</h1>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="gate-alert {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" class="gate-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="admin">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" autocomplete="username" required>
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" required>
+                <button type="submit" class="btn btn-block">Se connecter</button>
+            </form>
+
+            <div class="gate-divider">ou</div>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="client">
+                <button type="submit" class="btn btn-block btn-outline">Je suis un client</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,13 +1,118 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
-{% block title %}{{ product.name }}{% endblock %}
+{% block title %}{{ product.name }} - Boutique en ligne{% endblock %}
 
 {% block content %}
-<section class="product-detail">
-    <img src="{{ product.image.url }}" alt="{{ product.name }}">
-    <h1>{{ product.name }}</h1>
-    <p class="price">{{ product.price }} €</p>
-    <p>{{ product.description }}</p>
-    <a href="{% url 'checkout' %}" class="btn">Commander</a>
-</section>
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-5">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="img-fluid rounded shadow-sm" alt="{{ product.name }}">
+            {% endif %}
+        </div>
+        <div class="col-md-7">
+            <h1 class="mb-2">{{ product.name }}</h1>
+            {% if product.category %}
+                <span class="badge bg-secondary mb-3">{{ product.category.name }}</span>
+            {% endif %}
+            <p class="fs-3 fw-bold text-primary mb-3">{{ product.price }} FCFA</p>
+            {% if product.size_stocks.all %}
+                <div class="mb-3">
+                    <p class="fw-bold mb-2">Tailles disponibles &amp; stocks :</p>
+                    <ul class="list-unstyled d-flex flex-wrap gap-2 mb-0">
+                        {% for size in product.size_stocks.all %}
+                            <li class="border rounded px-3 py-1">
+                                <span class="fw-semibold">{{ size.size }}</span>
+                                {% if size.stock > 0 %}
+                                    <span class="text-success ms-1">{{ size.stock }} dispo</span>
+                                {% else %}
+                                    <span class="text-danger ms-1">Rupture</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            <p class="text-muted">{{ product.description }}</p>
+            <p class="fw-bold">
+                {% if product.size_stocks.all %}
+                    {% if product.total_available_stock > 0 %}
+                        {% if product.total_available_stock <= 5 %}
+                            <span class="text-warning">⚠️ Plus que {{ product.total_available_stock }} disponibles</span>
+                        {% else %}
+                            <span class="text-success">🟢 Disponible</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-danger">🔴 Rupture de stock</span>
+                    {% endif %}
+                {% elif product.stock > 0 %}
+                    {% if product.stock <= 5 %}
+                        <span class="text-warning">⚠️ Plus que {{ product.stock }} disponibles</span>
+                    {% else %}
+                        <span class="text-success">🟢 Disponible</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-danger">🔴 Rupture de stock</span>
+                {% endif %}
+            </p>
+            <p class="small text-muted">Boutique : {{ product.shop.name }}</p>
+
+            {% if product.size_stocks.all %}
+                {% if available_sizes %}
+                    <form method="post" action="{% url 'add_to_cart' product.pk %}" class="mb-3">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id-size" class="form-label fw-bold">Choisissez votre taille</label>
+                            <select name="size" id="id-size" class="form-select" required>
+                                <option value="">— Sélectionner —</option>
+                                {% for size in available_sizes %}
+                                    <option value="{{ size.size }}" data-stock="{{ size.stock }}">{{ size.size }} ({{ size.stock }} dispo)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id-quantity" class="form-label fw-bold">Quantité</label>
+                            <input type="number" id="id-quantity" name="quantity" value="1" min="1" class="form-control" style="max-width: 140px;">
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="submit" name="next" value="cart" class="btn btn-primary">Ajouter au panier</button>
+                            <button type="submit" name="next" value="checkout" class="btn btn-whatsapp">Commander</button>
+                        </div>
+                    </form>
+                {% endif %}
+            {% elif product.stock > 0 %}
+                <form method="post" action="{% url 'add_to_cart' product.pk %}" class="mb-3">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id-quantity" class="form-label fw-bold">Quantité</label>
+                        <input type="number" id="id-quantity" name="quantity" value="1" min="1" max="{{ product.stock }}" class="form-control" style="max-width: 140px;">
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" name="next" value="cart" class="btn btn-primary">Ajouter au panier</button>
+                        <button type="submit" name="next" value="checkout" class="btn btn-whatsapp">Commander</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        var sizeSelect = document.getElementById("id-size");
+        var qty = document.getElementById("id-quantity");
+        if (!sizeSelect || !qty) {
+            return;
+        }
+        function updateMax() {
+            var opt = sizeSelect.options[sizeSelect.selectedIndex];
+            var max = opt ? Number(opt.dataset.stock || 0) : 0;
+            qty.max = max;
+            if (max && Number(qty.value) > max) {
+                qty.value = max;
+            }
+        }
+        sizeSelect.addEventListener("change", updateMax);
+        updateMax();
+    })();
+</script>
 {% endblock %}

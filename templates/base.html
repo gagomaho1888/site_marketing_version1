@@ -5,28 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Boutique en ligne{% endblock %}</title>
     {% load static %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="/" class="logo">Boutique</a>
-            <ul>
-                <li><a href="#">Boutiques</a></li>
-                <li><a href="#">Produits</a></li>
-                <li><a href="#">Mon panier</a></li>
+    <header class="site-header">
+        <nav class="nav container">
+            <div class="nav-left">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'boutique' %}" class="logo">ALICE_SHOP</a>
+                {% endif %}
+                <a href="{% url 'home' %}" class="nav-btn">Accueil</a>
+            </div>
+
+            <button class="nav-toggler" aria-label="Menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+
+            <ul class="nav-links">
+                <li><a href="{% url 'product_list' %}">Produits</a></li>
+                <li class="has-dropdown">
+                    <a href="{% url 'product_list' %}" class="dropdown-toggle">Catégories</a>
+                    <ul class="dropdown">
+                        {% for cat in all_categories %}
+                            <li><a href="{% url 'product_list' %}?categorie={{ cat.slug }}">{{ cat.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li><a href="{% url 'cart' %}">Mon panier</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'logout' %}">Déconnexion</a></li>
+                {% elif is_pending_admin %}
+                    <li><a href="{% url 'login' %}" class="nav-btn">Se connecter</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>
 
     <main>
+        {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; {% now "Y" %} Boutique en ligne. Tous droits réservés.</p>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-12 col-md-4">
+                    <p class="footer-brand">ALICE_SHOP</p>
+                    {% if site_shop %}
+                        <p class="footer-shop">{{ site_shop.name }}</p>
+                        {% if site_shop.description %}
+                            <p>{{ site_shop.description }}</p>
+                        {% endif %}
+                        <p>{{ site_shop.city }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="col-6 col-md-2">
+                    <p class="footer-title">Navigation</p>
+                    <ul>
+                        <li><a href="{% url 'home' %}">Accueil</a></li>
+                        <li><a href="{% url 'product_list' %}">Produits</a></li>
+<li><a href="{% url 'cart' %}">Mon panier{% if cart_count %} ({{ cart_count }}){% endif %}</a></li>
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'boutique' %}">Ma boutique</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <p class="footer-title">Catégories</p>
+                    <ul>
+                        {% for cat in all_categories|slice:":6" %}
+                            <li><a href="{% url 'product_list' %}?categorie={{ cat.slug }}">{{ cat.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; {% now "Y" %} Boutique en ligne. Tous droits réservés.</p>
+            </div>
+        </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

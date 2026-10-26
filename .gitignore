@@ -14,6 +14,9 @@ media/*
 venv/
 env/
 
+# Secrets — jamais committer
+.env
+
 # IDE
 .vscode/
 .idea/

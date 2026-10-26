@@ -1,0 +1,73 @@
+﻿{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Accueil - Boutique en ligne{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <h1>Bienvenue sur notre boutique</h1>
+            <p>Découvrez nos boutiques et leurs produits.</p>
+            <a href="{% url 'product_list' %}" class="btn">Voir les produits</a>
+        </div>
+
+        <div class="hero-visual">
+            <img src="{% static 'images/Gemini_Generated_Image_lw2zb5lw2zb5lw2z.jpg' %}" alt="Image d'accueil">
+        </div>
+    </div>
+</section>
+
+<section class="section featured-section">
+    <div class="container">
+        <h2 class="section-title">Nos produits</h2>
+        {% if featured_products %}
+            <div class="products-grid">
+                {% for product in featured_products %}
+                    <article class="product-card">
+                        <div class="product-image">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        </div>
+                        <div class="product-info">
+                            <h3><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></h3>
+                            <p class="price">{{ product.price }} FCFA</p>
+                            <p class="availability">
+                                {% if product.size_stocks.all %}
+                                    {% if product.total_available_stock > 0 %}
+                                        <span class="in-stock">En stock</span>
+                                    {% else %}
+                                        <span class="out-of-stock">Rupture de stock</span>
+                                    {% endif %}
+                                {% elif product.stock > 0 %}
+                                    <span class="in-stock">En stock</span>
+                                {% else %}
+                                    <span class="out-of-stock">Rupture de stock</span>
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'product_detail' product.pk %}" class="btn">Voir le produit</a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>Aucun produit disponible pour le moment.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="section cta-section">
+    <div class="container text-center">
+        <h2 class="section-title">Commander ou nous contacter</h2>
+        <p>Découvrez nos boutiques et leurs produits.</p>
+        <div class="cta-actions">
+            <a href="{% url 'product_list' %}" class="btn">Voir les produits</a>
+            {% if whatsapp_url %}
+                <a href="{{ whatsapp_url }}" class="btn btn-whatsapp" target="_blank" rel="noopener">Contacter sur WhatsApp</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

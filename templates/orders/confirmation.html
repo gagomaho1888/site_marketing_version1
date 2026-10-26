@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Commande enregistrée{% endblock %}
+
+{% block content %}
+<section class="confirmation container py-4">
+    <div class="text-center py-4">
+        <div class="mb-3">
+            <span class="badge bg-success p-3 fs-6">✔ Commandé</span>
+        </div>
+        <h1 class="h3 mb-2">Merci {% if order.customer_name %}{{ order.customer_name }}{% endif %} !</h1>
+        <p class="fs-5 mb-2">Votre commande a bien été enregistrée.</p>
+        <p class="text-muted mb-1">
+            Commande n° {{ order.id }} — Total : {{ order.total }} FCFA
+        </p>
+        <ul class="list-unstyled text-muted d-inline-block text-start mt-2 mb-4">
+            {% for item in items %}
+                <li>
+                    {{ item.product.name }}{% if item.size %} — Taille {{ item.size }}{% endif %}
+                    × {{ item.quantity }}
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-whatsapp">
+                Confirmer sur WhatsApp
+            </a>
+            <a href="{% url 'product_list' %}" class="btn btn-primary">Continuer mes achats</a>
+        </div>
+        <p class="small text-muted mt-4 mb-0">
+            Cliquez sur « Confirmer sur WhatsApp » pour envoyer votre commande au vendeur.
+        </p>
+    </div>
+</section>
+{% endblock %}

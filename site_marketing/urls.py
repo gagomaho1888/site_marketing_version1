@@ -20,13 +20,21 @@ from django.contrib import admin
 from django.urls import include, path
 
 from . import views
+from products import views as product_views
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('', views.gate, name='gate'),
+    path('accueil/', views.home, name='home'),
     path('admin/', admin.site.urls),
     path('produits/', include('products.urls')),
+    path('boutique/', product_views.boutique_dashboard, name='boutique'),
+    path('boutique/categorie/<slug:slug>/', product_views.boutique_category, name='boutique_category'),
+    path('boutique/produit/nouveau/', product_views.product_create, name='product_create'),
+    path('boutique/produit/<int:pk>/modifier/', product_views.product_update, name='product_update'),
+    path('boutique/produit/<int:pk>/supprimer/', product_views.product_delete, name='product_delete'),
     path('boutiques/', include('shops.urls')),
     path('commandes/', include('orders.urls')),
+    path('utilisateurs/', include('users.urls')),
 ]
 
 if settings.DEBUG:
