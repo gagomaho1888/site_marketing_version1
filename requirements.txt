@@ -5,3 +5,8 @@ tzdata==2026.3
 Pillow==12.3.0
 psycopg[binary]==3.2.10
 python-dotenv==1.1.1
+dj-database-url==3.1.2
+gunicorn==26.2.0
+whitenoise[brotli]==6.12.0
+cloudinary==1.46.3
+django-cloudinary-storage @ git+https://github.com/klis87/django-cloudinary-storage.git@4d17f7db908c4fe4618ff9595fb1fb1c5c722fbe
