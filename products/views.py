@@ -6,8 +6,6 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from shops.models import Shop
-
 from .forms import ProductForm
 from .fuzzy import word_similarity
 from .models import CLOTHING_SIZE_CHOICES, SHOE_SIZE_CHOICES, Category, Product
@@ -52,8 +50,11 @@ def product_list(request):
 
 
 def product_search(request):
-    query = request.GET.get("q", "").strip()
-    limit = min(int(request.GET.get("limit", 8)), 20)
+    query = request.GET.get("q", "").strip()[:100]
+    try:
+        limit = max(1, min(int(request.GET.get("limit", 8)), 20))
+    except (TypeError, ValueError):
+        limit = 8
 
     if not query:
         return JsonResponse({"query": query, "results": []})
@@ -109,13 +110,16 @@ def product_detail(request, pk):
 
 
 def _get_shop(user):
-    shop = getattr(user, "shop", None)
-    return shop or Shop.objects.first()
+    return getattr(user, "shop", None)
 
 
 @login_required
 def boutique_dashboard(request):
     shop = _get_shop(request.user)
+    if not shop:
+        messages.error(request, "Aucune boutique n'est associée à votre compte.")
+        return redirect("home")
+
     categories = Category.objects.filter(is_active=True).annotate(
         num_products=Count("products", filter=Q(products__shop=shop))
     )
@@ -129,10 +133,14 @@ def boutique_dashboard(request):
 @login_required
 def boutique_category(request, slug):
     shop = _get_shop(request.user)
+    if not shop:
+        messages.error(request, "Aucune boutique n'est associée à votre compte.")
+        return redirect("home")
+
     category = get_object_or_404(
         Category, slug=slug, is_active=True
     )
-    products = Product.objects.filter(shop=shop, category=category) if shop else Product.objects.none()
+    products = Product.objects.filter(shop=shop, category=category)
     categories = Category.objects.filter(is_active=True)
 
     return render(request, "products/boutique_category.html", {

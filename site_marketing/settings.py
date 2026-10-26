@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,15 +28,14 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
-    if DEBUG:
-        SECRET_KEY = 'django-insecure-local-development-only'
-    else:
-        raise ValueError('SECRET_KEY doit être défini en production.')
+    raise ImproperlyConfigured(
+        'SECRET_KEY doit être défini (voir .env.example).'
+    )
 
 ALLOWED_HOSTS = [
     h.strip()
@@ -67,6 +67,11 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False') == 'True'
 SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False') == 'True'
 CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False') == 'True'
+
+# Limites anti-abus pour les formulaires et les uploads
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
 
 SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', 0))
 if SECURE_HSTS_SECONDS:
@@ -168,7 +173,7 @@ if DATABASE_URL:
     DATABASES['default'] = dj_database_url.parse(
         DATABASE_URL,
         conn_max_age=600,
-        ssl_require=True,
+        ssl_require=DATABASE_URL.startswith(('postgres://', 'postgresql://')),
     )
 
 

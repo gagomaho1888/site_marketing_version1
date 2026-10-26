@@ -2,7 +2,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.db import transaction
-from django.http import HttpResponseRedirect
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
 from products.models import Product
@@ -160,6 +160,14 @@ def _whatsapp_message(shop, items, total, customer_data):
     )
 
 
+def _remember_order(request, order):
+    """Garde l'accès à la confirmation limité à la session du client."""
+    order_ids = request.session.get("order_ids", [])
+    if order.pk not in order_ids:
+        order_ids.append(order.pk)
+    request.session["order_ids"] = order_ids[-10:]
+
+
 def checkout(request):
     cart_obj = Cart(request)
     items, total = build_cart_items(cart_obj.items())
@@ -175,6 +183,7 @@ def checkout(request):
             except StockError as exc:
                 messages.error(request, str(exc))
             else:
+                _remember_order(request, order)
                 cart_obj.clear()
                 return redirect("confirmation", pk=order.pk)
 
@@ -187,6 +196,9 @@ def checkout(request):
 
 def order_confirmation(request, pk):
     """Affiche la confirmation au client et le lien WhatsApp de la commande."""
+    if pk not in request.session.get("order_ids", []):
+        raise Http404("Commande introuvable.")
+
     order = get_object_or_404(Order, pk=pk)
 
     items = []

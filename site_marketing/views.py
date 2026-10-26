@@ -4,8 +4,6 @@ from django.shortcuts import redirect, render
 
 from products.models import Product, Category
 
-ADMIN_USERNAME = "Alice"
-
 
 def gate(request):
     if request.user.is_authenticated:
@@ -16,16 +14,13 @@ def gate(request):
         if action == "admin":
             username = request.POST.get("username", "").strip()
             password = request.POST.get("password", "")
-            if username != ADMIN_USERNAME:
-                messages.error(request, "Accès réservé à l'administrateur.")
-            else:
-                user = authenticate(request, username=username, password=password)
-                if user is not None:
-                    login(request, user)
-                    request.session["mode_client"] = False
-                    messages.success(request, f"Bienvenue, {user.username} !")
-                    return redirect("home")
-                messages.error(request, "Identifiant ou mot de passe incorrect.")
+            user = authenticate(request, username=username, password=password)
+            if user is not None and user.is_staff:
+                login(request, user)
+                request.session["mode_client"] = False
+                messages.success(request, f"Bienvenue, {user.username} !")
+                return redirect("home")
+            messages.error(request, "Identifiant ou mot de passe incorrect.")
         elif action == "client":
             request.session["mode_client"] = True
             return redirect("home")

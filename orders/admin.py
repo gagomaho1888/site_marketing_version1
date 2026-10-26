@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 
 from .models import Order, OrderItem
 
@@ -71,7 +71,7 @@ class OrderAdmin(admin.ModelAdmin):
 
     def stock_restored_display(self, obj):
         if obj.stock_restored:
-            return mark_safe('<b style="color:#27ae60;">Oui</b>')
+            return format_html('<b style="color:#27ae60;">Oui</b>')
         return "Non"
 
     stock_restored_display.short_description = "Stock restitué"

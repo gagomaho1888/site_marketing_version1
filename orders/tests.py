@@ -170,6 +170,23 @@ class CheckoutTests(TestCase):
         self.assertIn("Total+%3A+30000.00+FCFA", content)
         self.assertIn("Aminata", content)
 
+    def test_confirmation_is_limited_to_the_customer_session(self):
+        from orders.models import Order
+
+        self.client.post(
+            f"/commandes/panier/ajouter/{self.product.pk}/",
+            {"quantity": "1", "next": "cart"},
+        )
+        self.client.post(
+            "/commandes/commande/",
+            {"name": "Aminata", "phone": "771112233", "zone": "Ouakam"},
+        )
+        order = Order.objects.get()
+
+        other_client = self.client_class()
+        response = other_client.get(f"/commandes/confirmation/{order.pk}/")
+        self.assertEqual(response.status_code, 404)
+
     def test_refresh_after_checkout_does_not_create_duplicate(self):
         from orders.models import Order
 
